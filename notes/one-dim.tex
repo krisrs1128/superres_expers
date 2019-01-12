@@ -1,0 +1,202 @@
+\documentclass{article}
+\usepackage{amsmath, amssymb, graphicx}
+\input{preamble}
+
+\title{Super-Res in 1D}
+\author{Kris Sankaran}
+
+\begin{document}
+\maketitle
+
+These notes record some thoughts on running a type of uncertainty-aware,
+encoder-decoder style superresolver that we've been talking about for some time.
+The hope is to describe some ideas in (implementable) detail, along with the
+types of experiments we might run to evaluate those ideas. For the toy
+experiments I propose here, I'm thinking of superresolution as being done in one
+dimension, though the ideas should be bootstrappable into higher-dimensions too.
+
+\section{Formulation}
+
+First, we establish some notation.
+
+\begin{itemize}
+\item We have high-resolution $x_{i}^{H}$ for every site $i$. This is some vector
+in $\reals^H$, for some large $H$.
+
+\item We've been given many low resolution views $x_i^{L_v}$, for $v = 1,\dots,
+  V_i$, each of which lives in $\reals^{L}$ for some $L < H$.
+\item We have metadata $m_{iv}$ associated with site-view combination.
+\end{itemize}
+
+\subsection{Basic Encoder / Decoders}
+\label{subsec:label}
+
+There are two immediately plausible setups for an encoder-decoder approach to
+this problem: one encoding $z_{iv}$ per view or one encoding $z_i$ per site.
+
+These approaches are represented by Figures \ref{fig:shared_z} and
+\ref{fig:different_z}. What I mean in Figure \ref{fig:shared_z} is the
+following formulas,
+\begin{itemize}
+\item $x_{i}^{L_v} \sim \Gsn\left(x_i^{L_v} \vert \mu_{\theta}\left(z_i\right),
+  \sigma^{2}\left(z_i\right)\right)$ in the decoder and $z_i \sim
+  \Gsn\left(z_i \vert \mu_{\varphi}\left(\left\{x_i^{L_v}\right\}, x_i^{H}\right),
+  \sigma^{2}_{\varphi}\left(\left\{x_i^{L_v}\right\}, x_i^{H}\right)\right)$
+  in the encoder.
+\item For the encoder, we'd probably want some RNN-style, to allow a variable
+  number of views all to appear in the encoding. I'm not sure how this part
+  would generalize to 2D image input, since those would probably need something
+  like a U-net.
+\item It's unclear to me whether, on the test data, it's okay to just encode the
+  sequence of $x_i^{L_v}$'s without any final $x_i^{H}$. It's what I'd do on a
+  first pass, though.
+\end{itemize}
+
+In the second diagram, we'd have something like,
+\begin{itemize}
+\item $x_i^{L_v} \sim \Gsn\left(x_i^{L_v} \vert \mu_{\theta}\left(z_{iv}\right),
+  \sigma^{2}_{\theta}\left(z_{iv}\right)\right)$ in the decoder and $z_{iv} \sim
+  \Gsn\left(z_{iv} \vert \mu_{\varphi^{L}}\left(x_{i}^{L_v}\right),
+  \sigma_{\varphi^{L}}^{2}\left(x_i^{L_v}\right)\right)$ in the encoder (and the
+  same with the high-res view).
+\item To tie together the distributions of these $z_{iv}$'s, we might impose a
+  penalty like $D_{KL}\left(q_{\varphi^H}\left(z \vert x_i^{H} \right) \vert \vert
+  \prod_{v} q_{\varphi^L}\left(z\vert x_{i}^{L_v}\right)\right)$ 
+\end{itemize}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.6\textwidth]{figure/shared_z}
+  \caption{A single $z_i$ is used to code all the views (low and high res) for a
+    single site. The black arrows represent decoding, while the green ones are
+    encoding. \label{fig:shared_z} }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.6\paperwidth]{figure/different_z}
+  \caption{A different $z_{iv}$ is learned for each view. There would need to be
+    some component of the loss that encourages encodings for the same site to be
+    similar in some way. I forgot the green encoding arrows, but there's still
+    going on. \label{fig:different_z} }
+\end{figure}
+
+\subsection{Metadata}
+\label{subsec:metadata}
+
+It's natural to include metadata in the decoder an encoder steps as well.
+Basically, each of the $\mu_{\theta}, \mu_{\varphi}, \sigma^{2}_{\theta},
+\sigma^2_{\varphi}$ can take $m_{iv}$ as an argument along with whatever it's
+arguments had been before.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.6\paperwidth]{figure/shared_z_m}
+  \caption{The same approach as Figure \ref{fig:shared_z}, but where the
+    metadata are allowed to influence the observed data. \label{fig:shared_z_m}
+  }
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.6\paperwidth]{figure/different_z_m}
+  \caption{The same approach as Figure \ref{fig:different_z}, but where the
+    metadata are allowed to influence the observed
+    data. \label{fig:different_z_m} }
+\end{figure}
+
+\section{Misaligned Sampling}
+\label{sec:mis_sampling}
+
+In the current setup, there is no sense in which the decoded $x_i^{L_V}$'s are
+potentially downsampling to different coordinates. This may or may not be
+relevant, but I'm recording some thoughts just for reference.
+
+One naive way to represent this sort of downsampling would be to introduce new
+latent variables $s_{iv}$ which is a binary mask telling which of the original
+high-res coordinates we actually are observing in the $v^{th}$ low-res view. For
+example, we might have something like
+
+\begin{align*}
+x_{i}^{L_v} &\sim \Gsn\left(x_{i}^{L_{v}} \vert
+\left[\mu_{\theta}\left(z_{i}\right)\right]_{s_{iv}},
+\left[\sigma^2_{\theta}\left(z_i\right)\right]_{s_{iv}}\right)
+\end{align*}
+in the decoder.
+
+I'm not sure how I'd actually learn these $s_{i}$'s, it seems like an
+intractable problem\footnote{Though, maybe there's a way to approximate this
+  using attention?}.
+
+That said, at least in our toy examples, we might not need to learn the $s_i$'s,
+if we assume that the $x$-axis coordinates of each low-res sampling point is
+available.
+
+An approach that I like more, but which I'm also not quite sure how to fit,
+would be to associate each $z_i$ with a continuous function
+$\mu_{\theta}\left(z_{i}\right)$, which is only partially observed in the data
+that we have. The coordinates at which we observe the function might be known
+(easy case) or unknown (more complicated). We could also do something where we
+suppose the low res views are all sampled essentially on an even grid, but with
+some unknown jitter $\xi_{iv}$, this is the content of
+Figure \ref{error_var_view}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.6\paperwidth]{figure/err_var_view}
+  \caption{The top curve is the continuous $\mu_{\theta}\left(z_i\right)$, the
+    next row are sampling positions for the high-res view, and the rows below
+    give ideal (black) and observed (blue) sampling positions for the low res
+    views. The $\xi_{iv}$ are basically ``errors in variables'' associated with
+    the original sampling positions for low res view.\label{fig:err_var_view} }
+\end{figure}
+
+\section{Real Data}
+\label{sec:real_data}
+
+Just to get some intuition about this problem, and to demonstrate that this
+one-dimensional view is not totally artificial, this section gives some
+visualizations of the multiview Proba-V data.
+
+Each of these low-res views is 128 x 128. The high res views are 384 x 384. I've
+plotted the first 10 rows of each image as a row panel in the figures below. The
+$x$-axis are the column numbers in each image. The large points are the high-res
+pixel values, while the small semi-transparent ones are the associated low res
+views. The dark purple are high quality positions, while the red are low quality
+positions, according to the quality maps.
+
+The main thing to notice is that the high res views are usually close to the
+averages of the means of the low-res views in that part, though sometimes the
+low-res views seem to cluster into groups, and the high-res view lies in one of
+those clusters. Sometimes, there is a systematic difference between the high res
+view and all the low res views, and it seems like there really isn't much you
+could do about that. An interesting thing is that the poor quality values are
+usually biased upwards, though sometimes there are very biased samples that
+aren't labeled as low quality. Maybe something more robust than a mean should be
+used when combining information across views. Interestingly, there isn't so much
+of an issue with misalignment -- the whole previous section might have been
+unwarranted.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.6\paperwidth]{figure/views_comparison_imgset1117}
+\end{figure}
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.6\paperwidth]{figure/views_comparison_imgset1127}
+\end{figure}
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.6\paperwidth]{figure/views_comparison_imgset1147}
+\end{figure}
+\begin{figure}[ht]
+  \includegraphics[width=0.6\paperwidth]{figure/views_comparison_imgset1157}
+\end{figure}
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.7\paperwidth]{figure/views_comparison_imgset1153}
+\end{figure}
+
+
+\end{document}
+
