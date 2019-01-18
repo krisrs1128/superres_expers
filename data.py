@@ -19,7 +19,8 @@ class ProbaBase(Dataset):
     def __init__(self, data_dir, prefix="LR"):
         super(ProbaBase, self).__init__()
         self.data_dir = data_dir
-        imgsets = [os.path.join(data_dir, s) for s in os.listdir(self.data_dir)][:25]
+        imgsets = [os.path.join(data_dir, s) for s in os.listdir(self.data_dir)]
+        self.ids = [os.path.basename(s) for s in imgsets]
         self.images = []
 
         sites = [glob.glob(os.path.join(s, prefix + "*.png")) for s in imgsets]
@@ -53,6 +54,9 @@ class Combined(ProbaBase):
         self.low_res = ProbaBase(data_dir, "LR")
         self.high_res = ProbaBase(data_dir, "HR")
         self.qm = ProbaBase(data_dir, "QM")
+
+    def __len__(self):
+        return len(self.high_res)
 
     def __getitem__(self, index):
         return self.low_res[index], self.high_res[index], self.qm[index]
