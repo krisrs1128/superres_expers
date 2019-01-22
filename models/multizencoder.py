@@ -64,10 +64,12 @@ class MultiZEncoder(nn.Module):
         mu, logvar = self.decoders[res_type]
         return mu(h), logvar(h)
 
+
     def reparameterize(self, mu, logvar):
         std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
         return eps.mul(std).add_(mu)
+
 
     def forward(self, x_hr, x_lr):
         # encode x into z-space: phi(x)
