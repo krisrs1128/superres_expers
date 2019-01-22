@@ -267,9 +267,9 @@ class Curves(Dataset):
     ds = Curves()
 
     for i in range(len(ds)):
-        plt.scatter(ds[i][1][:, 0], ds[i][1][:, 1], s=0.1, cmap=i) # low res
+        plt.scatter(ds[i][0][:, 0], ds[i][0][:, 1], s=0.1, cmap=i) # low res
         for v in range(len(ds[i])):
-            plt.scatter(ds[i][0][v][:, 0], ds[i][0][v][:, 1], s=0.2, cmap=i) # high res
+            plt.scatter(ds[i][1][v][:, 0], ds[i][1][v][:, 1], s=0.2, cmap=i) # high res
     """
     def __init__(self, n_sites=5, K=8, n_views=3, hr_size=100, lr_size=25, sigmas=None):
         super(Curves, self).__init__()
@@ -283,7 +283,7 @@ class Curves(Dataset):
         return self.n_sites
 
     def __getitem__(self, idx):
-        return self.x[idx], self.x_hr[idx]
+        return self.x_hr[idx], self.x[idx]
 
 
 class CurvesUnwrapped(Dataset):
@@ -304,5 +304,5 @@ class CurvesUnwrapped(Dataset):
     def __getitem__(self, idx):
         site_idx = idx // self.n_views
         view_idx = idx % self.n_views
-        return self.x[site_idx][view_idx], self.x_hr[site_idx]
+        return self.x_hr[site_idx], self.x[site_idx][view_idx]
 
