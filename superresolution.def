@@ -1,0 +1,28 @@
+BootStrap: docker
+From: ubuntu:18.04
+
+# To run in this shell pointing to the data in deepglobe, you can execute
+# singularity shell -B /network/tmp1/sankarak/deepglobe/:data superresolution.sif
+# from inside the Mila cluster
+#
+# Note that this recipe can only be built on a machine where you are root, the
+# build command is
+# sudo singularity build superresolution.sif superresolution.def
+# vagrant scp default:/home/vagrant/superresolution* .
+# scp superresolution.* sankarak@172.16.2.105:/network/tmp1/sankarak/images/
+
+%post
+    apt -y update
+    apt -y upgrade
+    apt -y install software-properties-common
+    add-apt-repository ppa:ubuntugis/ubuntugis-unstable
+    apt -y update
+    apt -y install python3-pip
+    apt -y install build-essential libssl-dev libffi-dev python3-dev
+    apt -y install gdal-bin
+    pip3 install opencv-python retrying requests scikit-image scipy GDAL
+    pip3 install --no-cache-dir torch torchvision matplotlib ipython
+
+%environment
+
+%runscript
