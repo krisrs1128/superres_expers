@@ -4,11 +4,11 @@
 hr_size = 20
 lr_size = 2
 n_steps = 1000
-D_block = 50
-K = 200
+D_block = 20
+K = 1000
 
 # generate data and intentionally try to overfit model
-curves = CurvesUnwrapped(n_sites=4000, n_views=1, hr_size=hr_size, lr_size=lr_size)
+curves = CurvesUnwrapped(n_sites=10000, n_views=1, hr_size=hr_size, lr_size=lr_size)
 loader = torch.utils.data.DataLoader(curves, batch_size=100)
 model = MultiZUnshared(D_high=hr_size * 2, D_low=lr_size * 2, K=K, D_block=D_block)
 optimizer = optim.Adam(model.parameters(), lr=1e-4)

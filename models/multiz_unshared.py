@@ -12,6 +12,9 @@ class Block(nn.Module):
             nn.BatchNorm1d(D),
             nn.Linear(D, D),
             nn.ReLU(),
+            nn.BatchNorm1d(D),
+            nn.Linear(D, D),
+            nn.ReLU(),
             nn.BatchNorm1d(D)
         )
         self.meanvar = (nn.Linear(D, D_out), nn.Linear(D, D_out))
