@@ -9,14 +9,13 @@ class Block(nn.Module):
         self.block = nn.Sequential(
             nn.Linear(D_in, D),
             nn.ReLU(),
+            nn.BatchNorm1d(D),
             nn.Linear(D, D),
             nn.ReLU(),
+            nn.BatchNorm1d(D),
             nn.Linear(D, D),
             nn.ReLU(),
-            nn.Linear(D, D),
-            nn.ReLU(),
-            nn.Linear(D, D),
-            nn.ReLU()
+            nn.BatchNorm1d(D)
         )
         self.meanvar = (nn.Linear(D, D_out), nn.Linear(D, D_out))
 
@@ -105,11 +104,17 @@ def gsn_kl(phi_x):
     return - 0.5 * torch.sum(1 + phi_x[1] - phi_x[0].pow(2) - phi_x[1].exp())
 
 
-def loss_elem(x, theta_z, phi_x, beta=0.1):
+def loss_elem(x, theta_z, phi_x, beta=0.001):
     """
     Reconstruction Loss for VAE
     """
     return - expected_gsn(x, theta_z) + beta * gsn_kl(phi_x)
+
+def stack(x):
+    if x.dim() == 3: # first dimension is batch (size 1)
+        return torch.cat((x[:, :, 0], x[:, :, 1])).view(x.shape[0], -1)
+    else:
+        return torch.cat((x[:, 0], x[:, 1]))
 
 
 def train_epoch(model, loader, optimizer):
@@ -129,8 +134,8 @@ def train_epoch(model, loader, optimizer):
     train_loss = 0
     for i, (x_hr, x_lr) in enumerate(loader):
         optimizer.zero_grad()
-        x_hr = x_hr.flatten()
-        x_lr = x_lr.flatten()
+        x_hr = stack(x_hr)
+        x_lr = stack(x_lr)
         theta_high_z, phi_high_x, theta_low_z, phi_low_x = model(x_hr, x_lr)
         # loss = loss_elem(x_lr, theta_low_z, phi_low_x) + \
         #        loss_elem(x_hr, theta_high_z, phi_high_x)
