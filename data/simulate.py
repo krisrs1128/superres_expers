@@ -92,6 +92,7 @@ def segments_(K=4, grid_len=100):
         arrays.append(np.array(edge))
 
     arrays = np.vstack(arrays)[:grid_len, :]
+    arrays = (arrays - arrays.mean(0)) / arrays.std(0)
     return arrays, corners
 
 
@@ -271,7 +272,7 @@ class Curves(Dataset):
         for v in range(len(ds[i])):
             plt.scatter(ds[i][1][v][:, 0], ds[i][1][v][:, 1], s=0.2, cmap=i) # high res
     """
-    def __init__(self, n_sites=5, K=4, n_views=3, hr_size=100, lr_size=25, sigmas=None):
+    def __init__(self, n_sites=5, K=3, n_views=3, hr_size=100, lr_size=25, sigmas=None):
         super(Curves, self).__init__()
         x_hr, x = curves_wrapper(n_sites, K, n_views, hr_size, lr_size, sigmas, segments)
         self.n_sites = n_sites
@@ -290,7 +291,7 @@ class CurvesUnwrapped(Dataset):
     """
     Analog of Curves() but with each view indexed separately
     """
-    def __init__(self, n_sites=5, K=4, n_views=3, hr_size=100, lr_size=25, sigmas=None):
+    def __init__(self, n_sites=5, K=3, n_views=3, hr_size=100, lr_size=25, sigmas=None):
         super(CurvesUnwrapped, self).__init__()
         x_hr, x = curves_wrapper(n_sites, K, n_views, hr_size, lr_size, sigmas, segments)
         self.n_sites = n_sites
