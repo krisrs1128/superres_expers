@@ -10,6 +10,12 @@ class Block(nn.Module):
             nn.Linear(D_in, D),
             nn.ReLU(),
             nn.Linear(D, D),
+            nn.ReLU(),
+            nn.Linear(D, D),
+            nn.ReLU(),
+            nn.Linear(D, D),
+            nn.ReLU(),
+            nn.Linear(D, D),
             nn.ReLU()
         )
         self.meanvar = (nn.Linear(D, D_out), nn.Linear(D, D_out))
@@ -79,15 +85,15 @@ class MultiZUnshared(nn.Module):
 
     def forward(self, x_hr, x_lr):
         # encode x into z-space: phi(x)
-        phi_low_x = self.encode(x_lr, "low_res")
         phi_high_x = self.encode(x_hr, "high_res")
-        z_low = self.reparameterize(phi_low_x[0], phi_low_x[1])
+        phi_low_x = self.encode(x_lr, "low_res")
         z_high = self.reparameterize(phi_high_x[0], phi_high_x[1])
+        z_low = self.reparameterize(phi_low_x[0], phi_low_x[1])
 
         # decode x from z-space: theta(z)
-        theta_low_z = self.decode(z_low, "low_res")
         theta_high_z = self.decode(z_high, "high_res")
-        return theta_low_z, phi_low_x, theta_high_z, phi_high_x
+        theta_low_z = self.decode(z_low, "low_res")
+        return theta_high_z, phi_high_x, theta_low_z, phi_low_x
 
 
 def expected_gsn(x, theta_z):
@@ -99,11 +105,11 @@ def gsn_kl(phi_x):
     return - 0.5 * torch.sum(1 + phi_x[1] - phi_x[0].pow(2) - phi_x[1].exp())
 
 
-def loss_elem(x, theta_z, phi_x):
+def loss_elem(x, theta_z, phi_x, beta=0.1):
     """
     Reconstruction Loss for VAE
     """
-    return - expected_gsn(x, theta_z) + gsn_kl(phi_x)
+    return - expected_gsn(x, theta_z) + beta * gsn_kl(phi_x)
 
 
 def train_epoch(model, loader, optimizer):
@@ -125,9 +131,10 @@ def train_epoch(model, loader, optimizer):
         optimizer.zero_grad()
         x_hr = x_hr.flatten()
         x_lr = x_lr.flatten()
-        theta_low_z, phi_low_x, theta_high_z, phi_high_x = model(x_hr, x_lr)
-        loss = loss_elem(x_lr, theta_low_z, phi_low_x) + \
-               loss_elem(x_hr, theta_high_z, phi_high_x)
+        theta_high_z, phi_high_x, theta_low_z, phi_low_x = model(x_hr, x_lr)
+        # loss = loss_elem(x_lr, theta_low_z, phi_low_x) + \
+        #        loss_elem(x_hr, theta_high_z, phi_high_x)
+        loss = loss_elem(x_hr, theta_high_z, phi_high_x)
         loss.backward()
         train_loss += loss.item()
         optimizer.step()
