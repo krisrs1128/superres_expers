@@ -14,14 +14,16 @@ class MultiZEncoder(nn.Module):
     low and high res z's are passed through the same few transformations before
     then.
     """
-    def __init__(self, D_low=50, D_high=200, K=20):
+    def __init__(self, D_low=50, D_high=200, K=10):
         super(MultiZEncoder, self).__init__()
 
         # Different initial encodings, but shared afterwards
         theta_shared = nn.Sequential(
+            nn.ReLU(),
             nn.Linear(20, 20),
             nn.ReLU(),
-            nn.Linear(20, K)
+            nn.Linear(20, 20),
+            nn.ReLU(),
         )
 
         self.encoders = {
