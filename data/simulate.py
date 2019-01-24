@@ -243,7 +243,7 @@ def curves_wrapper(n_sites, K, n_views, hr_size, lr_size, sigmas, f=curves):
          giving coordinates of the low resolution views for each site.
     """
     if not sigmas:
-        sigmas = nested_gammas(n_sites, n_views, size)
+        sigmas = nested_gammas(n_sites, n_views, lr_size)
 
     x_hr, _ = f(n_sites, K, hr_size)
     x_down = downsample(x_hr, n_views, lr_size)
