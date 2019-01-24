@@ -29,15 +29,21 @@ for i in range(n_steps):
 plt.show()
 
 # compare truth with reconstruction means
-for i in range(1):
-    x_hr, x_lr = curves[i]
+liter = iter(loader)
+for i in range(10):
+    x_hr, x_lr = next(liter)
     theta_z, _, _, _ = model(stack(x_hr), stack(x_lr))
-    plt.scatter(stack(x_hr), theta_z[0].detach(), s=2)
+    for j in range(len(x_hr)):
+        plt.scatter(stack(x_hr[j]), theta_z[0][j].detach().numpy(), s=0.5, alpha=0.1)
 
 # compare truth with sampled reconstructions
-for j in range(100):
-    x_rec = model.reparameterize(theta_z[0], theta_z[1]).detach()
-    plt.scatter(x_hr.flatten(), x_rec, s=0.1)
+liter = iter(loader)
+for i in range(1):
+    x_hr, x_lr = next(liter)
+    theta_z, _, _, _ = model(stack(x_hr), stack(x_lr))
+    for j in range(len(x_hr)):
+        x_rec = model.reparameterize(theta_z[0][j], theta_z[1][j]).detach()
+        plt.scatter(stack(x_hr[j]), x_rec.detach().numpy(), s=0.5, alpha=0.1)
 
 # decrease learning rate
 for g in optimizer.param_groups:
