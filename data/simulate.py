@@ -13,7 +13,7 @@ from scipy.special import comb
 ## Functions for drawing (high-res) line segments and bezier curves
 ###############################################################################
 
-def curves(n=100, K=8, grid_len=100):
+def curves(n=100, K=3, grid_len=100):
     """
     Collection of Bezier Curves
 
@@ -271,9 +271,9 @@ class Curves(Dataset):
         for v in range(len(ds[i])):
             plt.scatter(ds[i][1][v][:, 0], ds[i][1][v][:, 1], s=0.2, cmap=i) # high res
     """
-    def __init__(self, n_sites=5, K=8, n_views=3, hr_size=100, lr_size=25, sigmas=None):
+    def __init__(self, n_sites=5, K=4, n_views=3, hr_size=100, lr_size=25, sigmas=None):
         super(Curves, self).__init__()
-        x_hr, x = curves_wrapper(n_sites, K, n_views, hr_size, lr_size, sigmas)
+        x_hr, x = curves_wrapper(n_sites, K, n_views, hr_size, lr_size, sigmas, segments)
         self.n_sites = n_sites
         self.n_views = n_views
         self.x_hr = x_hr
@@ -290,9 +290,9 @@ class CurvesUnwrapped(Dataset):
     """
     Analog of Curves() but with each view indexed separately
     """
-    def __init__(self, n_sites=5, K=8, n_views=3, hr_size=100, lr_size=25, sigmas=None):
+    def __init__(self, n_sites=5, K=4, n_views=3, hr_size=100, lr_size=25, sigmas=None):
         super(CurvesUnwrapped, self).__init__()
-        x_hr, x = curves_wrapper(n_sites, K, n_views, hr_size, lr_size, sigmas)
+        x_hr, x = curves_wrapper(n_sites, K, n_views, hr_size, lr_size, sigmas, segments)
         self.n_sites = n_sites
         self.n_views = n_views
         self.x_hr = x_hr
