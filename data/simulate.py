@@ -224,7 +224,7 @@ def noise(x, sigmas):
 ## Dataset classes to use for actual experimentation
 ###############################################################################
 
-def curves_wrapper(n_sites, K, n_views, size, sigmas, f=curves):
+def curves_wrapper(n_sites, K, n_views, hr_size, lr_size, sigmas, f=curves):
     """
     Wrapper for Initializing Curves Dataset
 
@@ -233,7 +233,8 @@ def curves_wrapper(n_sites, K, n_views, size, sigmas, f=curves):
     :param n_views: An integer specifying the number of downsampled versions of
       each site to define.
     :param sigmas: A list of list of numpy arrays, giving the amount of noise
-    :param size: The size of the downsampled sequences
+    :param hr_size: The size of the high resolution sequences
+    :param lr_size: The size of the downsampled sequences
     :param f: A function to use for indexing. See downsample_ for examples.
     :return x_hr, x_lr: A tuple containing,
       - x_hr: A length n_sites list of numpy arrays giving coordinates of the
@@ -244,9 +245,17 @@ def curves_wrapper(n_sites, K, n_views, size, sigmas, f=curves):
     if not sigmas:
         sigmas = nested_gammas(n_sites, n_views, size)
 
-    x_hr, _ = f(n_sites, n_views)
-    x_down = downsample(x_hr, n_views, size)
-    return x_hr, noise(x_down, sigmas)
+    x_hr, _ = f(n_sites, K, hr_size)
+    x_down = downsample(x_hr, n_views, lr_size)
+    x_lr = noise(x_down, sigmas)
+
+    # tensorify
+    for i in range(len(x_hr)):
+        x_hr[i] = torch.tensor(x_hr[i].copy()).float()
+        for k in range(len(x_lr[i])):
+            x_lr[i][k] = torch.tensor(x_lr[i][k].copy()).float()
+
+    return x_hr, x_lr
 
 
 class Curves(Dataset):
@@ -258,13 +267,13 @@ class Curves(Dataset):
     ds = Curves()
 
     for i in range(len(ds)):
-        plt.scatter(ds[i][1][:, 0], ds[i][1][:, 1], s=0.1, cmap=i) # low res
+        plt.scatter(ds[i][0][:, 0], ds[i][0][:, 1], s=0.1, cmap=i) # low res
         for v in range(len(ds[i])):
-            plt.scatter(ds[i][0][v][:, 0], ds[i][0][v][:, 1], s=0.2, cmap=i) # high res
+            plt.scatter(ds[i][1][v][:, 0], ds[i][1][v][:, 1], s=0.2, cmap=i) # high res
     """
-    def __init__(self, n_sites=5, K=8, n_views=3, size=25, sigmas=None):
+    def __init__(self, n_sites=5, K=8, n_views=3, hr_size=100, lr_size=25, sigmas=None):
         super(Curves, self).__init__()
-        x_hr, x = curves_wrapper(n_sites, K, n_views, size, sigmas)
+        x_hr, x = curves_wrapper(n_sites, K, n_views, hr_size, lr_size, sigmas)
         self.n_sites = n_sites
         self.n_views = n_views
         self.x_hr = x_hr
@@ -274,16 +283,16 @@ class Curves(Dataset):
         return self.n_sites
 
     def __getitem__(self, idx):
-        return self.x[idx], self.x_hr[idx]
+        return self.x_hr[idx], self.x[idx]
 
 
 class CurvesUnwrapped(Dataset):
     """
     Analog of Curves() but with each view indexed separately
     """
-    def __init__(self, n_sites=5, K=8, n_views=3, size=25, sigmas=None):
+    def __init__(self, n_sites=5, K=8, n_views=3, hr_size=100, lr_size=25, sigmas=None):
         super(CurvesUnwrapped, self).__init__()
-        x_hr, x = curves_wrapper(n_sites, K, n_views, size, sigmas)
+        x_hr, x = curves_wrapper(n_sites, K, n_views, hr_size, lr_size, sigmas)
         self.n_sites = n_sites
         self.n_views = n_views
         self.x_hr = x_hr
@@ -295,5 +304,5 @@ class CurvesUnwrapped(Dataset):
     def __getitem__(self, idx):
         site_idx = idx // self.n_views
         view_idx = idx % self.n_views
-        return self.x[site_idx][view_idx], self.x_hr[site_idx]
+        return self.x_hr[site_idx], self.x[site_idx][view_idx]
 
