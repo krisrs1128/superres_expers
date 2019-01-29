@@ -9,4 +9,5 @@
 #SBATCH -C GPU_MEM:16GB
 
 module load singularity
-singularity exec python3 apply_multiz.py
+cd /home/sankarak/superres_expers/sandbox
+singularity shell /home/sankarak/scratch/images/superresolution.sif apply_multiz.sh
