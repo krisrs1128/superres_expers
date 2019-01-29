@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-python3 apply_multiz.py
+python3 $HOME/sandbox/apply_multiz.py
