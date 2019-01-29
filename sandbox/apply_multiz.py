@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 sys.path.append("../")
+print(sys.path)
 from models.multiz_unshared import MultiZUnshared, train_epoch
 from data.simulate import CurvesUnwrapped
 import os

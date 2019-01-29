@@ -8,5 +8,4 @@
 #SBATCH --mem-per-cpu=2G
 
 module load singularity
-cd /home/sankarak/superres_expers/sandbox
-singularity shell /home/sankarak/scratch/images/superresolution.sif apply_multiz.sh
+singularity shell -B $HOME/superres_expers/:/home /home/sankarak/scratch/images/superresolution.sif /home/sandbox/apply_multiz.sh
