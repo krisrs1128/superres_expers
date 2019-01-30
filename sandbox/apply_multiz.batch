@@ -11,5 +11,4 @@
 #SBATCH --time=10:00
 
 module load singularity
-singularity shell -B $HOME/superres_expers/:/home /home/sankarak/scratch/images/superresolution.sif /home/sandbox/apply_multiz.sh
-singularity shell -B $HOME/superres_expers/:/home /home/sankarak/scratch/images/superresolution.sif
+singularity shell -B $HOME/superres_expers/:/home $SCRATCH/images/superresolution.sif /home/sandbox/apply_multiz.sh
