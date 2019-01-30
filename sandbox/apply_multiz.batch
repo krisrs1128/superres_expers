@@ -9,6 +9,7 @@
 #SBATCH --output $HOME/cluster/%a.out
 #SBATCH --time=30:00
 #SBATCH --gres=gpu:1
+#SBATCH --accounts=def-bengioy
 #SBATCH --mem=4000M
 module load singularity
 singularity shell -B $HOME/super-res/superres_expers/:/home $SCRATCH/images/superresolution.sif /home/sandbox/apply_multiz.sh
