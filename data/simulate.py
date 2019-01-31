@@ -5,6 +5,7 @@ Simulate lines for the superresolution experiment
 """
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
 from torch.utils.data import Dataset
 from scipy.special import comb
 
