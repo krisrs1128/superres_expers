@@ -24,10 +24,6 @@ From: ubuntu:18.04
     pip3 install opencv-python retrying requests scikit-image scipy GDAL
     pip3 install --no-cache-dir torch torchvision matplotlib ipython
 
-    wget https://kelvins.esa.int/media/competitions/proba-v-super-resolution/probav_data.zip
-    mkdir data
-    mv probav_data.zip data
-    unzip data/probav_data.zip
 %environment
 
 %runscript
