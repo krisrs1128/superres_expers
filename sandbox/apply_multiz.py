@@ -4,6 +4,7 @@ sys.path.append("../")
 from models.multiz_unshared import MultiZUnshared, train_epoch
 from data.simulate import CurvesUnwrapped
 import os
+import shutil
 import torch
 import torch.optim as optim
 
