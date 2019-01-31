@@ -19,6 +19,9 @@ out_dir = "./exper_output/"
 eta = 1e-4
 save_interval = 100
 
+if os.path.exists(out_dir):
+    shutil.rmtree(out_dir)
+
 os.makedirs(out_dir)
 
 # generate data and intentionally try to overfit model
