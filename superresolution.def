@@ -9,20 +9,26 @@ From: ubuntu:18.04
 # build command is
 # sudo singularity build superresolution.sif superresolution.def
 # vagrant scp default:/home/vagrant/superresolution* .
-# scp superresolution.* sankarak@172.16.2.105:/network/tmp1/sankarak/images/
+# scp superresolution.* mila:/network/tmp1/sankarak/images/
+# scp superresolution.* cedar:/scratch/sankarak/images/
 
 %post
     apt -y update
     apt -y upgrade
     apt -y install software-properties-common
-    apt -y install vim unzip wget
+    apt -y install vim unzip wget sudo
     add-apt-repository ppa:ubuntugis/ubuntugis-unstable
     apt -y update
-    apt -y install python3-pip
     apt -y install build-essential libssl-dev libffi-dev python3-dev
-    apt -y install gdal-bin
-    pip3 install opencv-python retrying requests scikit-image scipy GDAL
+    apt -y install python3-pip python3-tk
+    apt -y install gdal-bin libgdal-dev
+    pip3 install numpy opencv-python retrying requests scikit-image scipy
+    pip3 install --global-option=build_ext --global-option="-I/usr/include/gdal" GDAL==`gdal-config --version`
     pip3 install --no-cache-dir torch torchvision matplotlib ipython
+
+    # needed for the requests package
+    mkdir -p /etc/pki/tls/certs/
+    ln -s /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt
 
 %environment
 
