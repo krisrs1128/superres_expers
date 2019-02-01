@@ -1,12 +1,11 @@
 #!/bin/bash
 #
 #SBATCH --error multiz.err
-#SBATCH --gres=gpu:1
 #SBATCH --job-name=multiz
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=sankaran.kris@gmail.com
-#SBATCH --mem=4000M
+#SBATCH --mem=1000M
 #SBATCH --ntasks=1
 #SBATCH --output=multiz.out
-#SBATCH --time=30:00
+#SBATCH --time=00:30:00
 singularity shell --nv -B $HOME/super-res/superres_expers/:/home $SCRATCH/images/superresolution.sif /home/sandbox/apply_multiz.sh
