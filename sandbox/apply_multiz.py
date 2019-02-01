@@ -2,6 +2,7 @@
 import sys
 sys.path.append("../")
 from models.multiz_unshared import MultiZUnshared, train_epoch
+from pipeline.pipeline import save_checkpoint
 from data.simulate import CurvesUnwrapped
 import os
 import shutil
@@ -36,4 +37,4 @@ for i in range(n_steps):
     print("{} || {}".format(i, loss))
 
     if i % save_interval == 0:
-        torch.save(model, "{}/model_{}".format(out_dir, i))
+        save_checkpoint(model, optimizer, "{}/model_{}".format(out_dir, i))
