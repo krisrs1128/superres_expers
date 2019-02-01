@@ -117,7 +117,7 @@ def stack(x):
         return torch.cat((x[:, 0], x[:, 1]))
 
 
-def train_epoch(model, loader, optimizer):
+def train_epoch(model, loader, optimizer, device):
     """
     Train Single Epoch of Model
 
@@ -125,6 +125,7 @@ def train_epoch(model, loader, optimizer):
     :param loader: A unwrapped DataLoader instance, each of whose elements
       provides high and a single corresponding low resolution view.
     :param optimizer: A torch.optim object.
+    :param device: Whether to use cuda or cpi
     :return A tuple containing
       - model: The model with updated weights.
       - optimizer: The state of the optimzier at the end of the training epoch.
@@ -136,6 +137,11 @@ def train_epoch(model, loader, optimizer):
         optimizer.zero_grad()
         x_hr = stack(x_hr)
         x_lr = stack(x_lr)
+
+        if device == "cuda":
+            x_hr = x_hr.cuda()
+            x_lr = x_lr.cuda()
+
         theta_high_z, phi_high_x, theta_low_z, phi_low_x = model(x_hr, x_lr)
         # loss = loss_elem(x_lr, theta_low_z, phi_low_x) + \
         #        loss_elem(x_hr, theta_high_z, phi_high_x)

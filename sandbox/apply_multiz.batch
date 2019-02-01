@@ -1,16 +1,14 @@
 #!/bin/bash
 #
-#SBATCH --account=def-bengioy
 #SBATCH --cpus-per-task=1
-#SBATCH --error $HOME/cluster/superres_vae.err
+#SBATCH --error $HOME/cluster/multiz.err
 #SBATCH --gres=gpu:k80
 #SBATCH --qos=unkillable
-#SBATCH --job-name=superres_vae
+#SBATCH --job-name=multiz
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=sankaran.kris@gmail.com
 #SBATCH --mem=4000M
 #SBATCH --ntasks=1
 #SBATCH --output $HOME/cluster/superres_vae.out
-#SBATCH --time=30:00
-module load singularity
+#SBATCH --time=10:00
 singularity shell --nv -B $HOME/super-res/superres_expers/:/home $SCRATCH/images/superresolution.sif /home/sandbox/apply_multiz.sh

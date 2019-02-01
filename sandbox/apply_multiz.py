@@ -20,6 +20,7 @@ batch_size = 100
 out_dir = "./exper_output/"
 eta = 1e-4
 save_interval = 100
+device = torch.device('cuda' if torch.cuda.is_available() else "cpu")
 
 if os.path.exists(out_dir):
     shutil.rmtree(out_dir)
@@ -30,10 +31,14 @@ os.makedirs(out_dir)
 curves = CurvesUnwrapped(n_sites=n_sites, n_views=1, hr_size=hr_size, lr_size=lr_size)
 loader = torch.utils.data.DataLoader(curves, batch_size=batch_size)
 model = MultiZUnshared(D_high=hr_size * 2, D_low=lr_size * 2, K=K, D_block=D_block)
+
+if device.type == "cuda":
+    model = model.cuda()
+
 optimizer = optim.Adam(model.parameters(), lr=eta)
 
 for i in range(n_steps):
-    model, optimizer, loss = train_epoch(model, loader, optimizer)
+    model, optimizer, loss = train_epoch(model, loader, optimizer, device)
     print("{} || {}".format(i, loss))
 
     if i % save_interval == 0:
