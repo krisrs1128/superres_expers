@@ -3,7 +3,8 @@
 #SBATCH --account=def-bengioy
 #SBATCH --cpus-per-task=1
 #SBATCH --error $HOME/cluster/superres_vae.err
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:k80
+#SBATCH --qos=unkillable
 #SBATCH --job-name=superres_vae
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=sankaran.kris@gmail.com
